@@ -32,3 +32,27 @@
 ```bash
 sudo apt update
 sudo apt install python3-pip python3-venv tshark -y
+```
+
+### 2. 가상 환경(venv) 생성 및 활성화
+프로젝트 폴더 내에서 독립된 개발 환경을 구축합니다. (가상 환경 폴더는 .gitignore에 의해 관리 대상에서 제외됩니다.)
+
+```bash
+# 가상 환경 생성 (최초 1회 실행)
+python3 -m venv venv
+
+# 가상 환경 활성화 (작업 시작 시 매번 실행)
+source venv/bin/activate
+```
+활성화 성공 시 터미널 프롬프트 앞에 (venv) 표시가 나타납니다.
+
+### 3. 라이브러리 설치
+프로젝트에 필요한 핵심 라이브러리들을 한 번에 설치합니다. 
+
+```bash
+# pip 최신 버전 업데이트
+pip install --upgrade pip
+
+# requirements.txt에 명시된 라이브러리 설치
+pip install -r requirements.txt
+```
