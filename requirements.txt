@@ -1,8 +1,9 @@
-# 프로젝트에 필요한 Python 라이브러리 목록
-
-scapy
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+eventlet==0.33.3
 pandas
 scikit-learn
+scapy
 xgboost
 streamlit
 pyshark

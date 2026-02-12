@@ -17,3 +17,6 @@ data/raw/
 # 파이썬 캐시
 __pycache__/
 *.py[cod]
+
+# SQLite 데이터베이스
+*.db
