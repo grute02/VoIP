@@ -1,31 +1,64 @@
+"""
+더미 데이터 DB 삽입 스크립트
+generate_dummy.py 실행 후 사용: python insert_dummy.py
+
+사용 순서:
+  1. python init_db.py
+  2. python src/parser/generate_dummy.py
+  3. python insert_dummy.py
+"""
+
 import sqlite3
-import random
-from datetime import datetime
+import pandas as pd
+import os
 
-def insert_dummy_data():
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
+DB_PATH  = "database.db"
+CSV_PATH = "data/processed/sessions_dummy.csv"
 
-    # 가짜 데이터 생성 (마치 Scapy가 분석한 것처럼!)
-    session_id = f"TEST_SESSION_{random.randint(1000, 9999)}"
-    avg_latency = 150.5  # 150ms 지연
-    avg_jitter = 45.2    # 45ms 지터 (상당히 높음)
-    packet_loss = 2.5    # 2.5% 손실
-    
-    print(f"🛠️ 가짜 데이터 생성 중... ID: {session_id}")
 
-    try:
-        cursor.execute('''
-            INSERT INTO call_session (session_id, avg_latency, avg_jitter, packet_loss, seq_gap_rate, label)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (session_id, avg_latency, avg_jitter, packet_loss, 0.1, 1)) # label 1 = 사기 의심
-        
-        conn.commit()
-        print("✅ 데이터가 성공적으로 DB에 들어갔어!")
-    except Exception as e:
-        print(f"❌ 에러 발생: {e}")
-    finally:
-        conn.close()
+def insert_dummy():
+    if not os.path.exists(CSV_PATH):
+        print(f"[ERROR] CSV 없음: {CSV_PATH}")
+        print("  → 먼저 python src/parser/generate_dummy.py 를 실행하세요.")
+        return
 
-if __name__ == '__main__':
-    insert_dummy_data()
+    df = pd.read_csv(CSV_PATH, encoding="utf-8")
+    conn = sqlite3.connect(DB_PATH)
+    cur  = conn.cursor()
+
+    inserted = 0
+    skipped  = 0
+
+    for _, row in df.iterrows():
+        try:
+            cur.execute(
+                """
+                INSERT OR IGNORE INTO call_session
+                  (session_id, avg_latency, avg_jitter, iat_variance,
+                   packet_loss, seq_gap_rate, label)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    row["session_id"],
+                    row["avg_latency"],
+                    row["avg_jitter"],
+                    row.get("iat_variance", 0.0),
+                    row["packet_loss"],
+                    row["seq_gap_rate"],
+                    int(row["label"]),
+                ),
+            )
+            if cur.rowcount:
+                inserted += 1
+            else:
+                skipped += 1
+        except Exception as e:
+            print(f"[WARN] 삽입 실패 ({row['session_id']}): {e}")
+
+    conn.commit()
+    conn.close()
+    print(f"[OK] 삽입 완료 — 신규: {inserted}개 / 중복 스킵: {skipped}개")
+
+
+if __name__ == "__main__":
+    insert_dummy()

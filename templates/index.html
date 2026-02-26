@@ -1,27 +1,349 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SIM Box 탐지 시스템</title>
-    <style>
-      body {
-        font-family: "Malgun Gothic", sans-serif;
-        text-align: center;
-        padding: 50px;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIM Box 탐지 시스템 대시보드</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+
+    header {
+      background: #1e293b;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #334155;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+    }
+
+    main { padding: 28px 32px; }
+
+    /* 통계 카드 */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #334155;
+    }
+    .card .label { font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+    .card .value { font-size: 32px; font-weight: 700; }
+    .card.fraud   .value { color: #f87171; }
+    .card.normal  .value { color: #4ade80; }
+    .card.latency .value { color: #60a5fa; }
+    .card.jitter  .value { color: #f59e0b; }
+
+    /* 차트 + 업로드 */
+    .mid-row {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .panel {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #334155;
+    }
+    .panel h2 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: #94a3b8; }
+
+    /* 업로드 폼 */
+    .upload-zone {
+      border: 2px dashed #334155;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .upload-zone:hover { border-color: #60a5fa; }
+    .upload-zone p { font-size: 13px; color: #64748b; margin-top: 8px; }
+    #pcap-file { display: none; }
+
+    .radio-group { display: flex; gap: 12px; justify-content: center; margin: 14px 0; }
+    .radio-group label { font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn:hover { background: #2563eb; }
+    .btn:disabled { background: #334155; cursor: not-allowed; }
+
+    #upload-result {
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 20px;
+      text-align: center;
+    }
+    .ok   { color: #4ade80; }
+    .warn { color: #f59e0b; }
+    .err  { color: #f87171; }
+
+    /* 세션 테이블 */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      color: #64748b;
+      font-weight: 500;
+      border-bottom: 1px solid #334155;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid #1e293b; }
+    tr:hover td { background: #1e293b; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-fraud  { background: #450a0a; color: #f87171; }
+    .badge-normal { background: #052e16; color: #4ade80; }
+    .badge-none   { background: #1e293b; color: #64748b; }
+
+    /* 새로고침 버튼 */
+    .refresh-btn {
+      background: none;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      float: right;
+    }
+    .refresh-btn:hover { border-color: #60a5fa; color: #60a5fa; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="status-dot" id="status-dot"></div>
+  <h1>🛡 SIM Box 탐지 시스템 대시보드</h1>
+</header>
+
+<main>
+
+  <!-- 통계 카드 -->
+  <div class="cards">
+    <div class="card">
+      <div class="label">전체 세션</div>
+      <div class="value" id="stat-total">—</div>
+    </div>
+    <div class="card fraud">
+      <div class="label">🚨 사기 의심</div>
+      <div class="value" id="stat-fraud">—</div>
+    </div>
+    <div class="card normal">
+      <div class="label">✅ 정상</div>
+      <div class="value" id="stat-normal">—</div>
+    </div>
+    <div class="card latency">
+      <div class="label">평균 지연 (ms)</div>
+      <div class="value" id="stat-latency">—</div>
+    </div>
+  </div>
+
+  <!-- 차트 + 업로드 -->
+  <div class="mid-row">
+
+    <div class="panel">
+      <h2>세션별 지터 분포</h2>
+      <canvas id="jitter-chart" height="180"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2>PCAP 업로드</h2>
+      <div class="upload-zone" onclick="document.getElementById('pcap-file').click()">
+        <div style="font-size:32px">📂</div>
+        <p id="file-name">파일을 선택하거나 드래그하세요<br>.pcap / .pcapng</p>
+      </div>
+      <input type="file" id="pcap-file" accept=".pcap,.pcapng">
+
+      <div class="radio-group">
+        <label><input type="radio" name="label" value="-1" checked> 미라벨</label>
+        <label><input type="radio" name="label" value="0"> 정상</label>
+        <label><input type="radio" name="label" value="1"> 사기</label>
+      </div>
+
+      <button class="btn" id="upload-btn" onclick="uploadPcap()">업로드 &amp; 분석</button>
+      <div id="upload-result"></div>
+    </div>
+
+  </div>
+
+  <!-- 세션 테이블 -->
+  <div class="panel">
+    <h2>
+      최근 세션
+      <button class="refresh-btn" onclick="loadSessions()">↻ 새로고침</button>
+    </h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Session ID</th>
+          <th>지연 (ms)</th>
+          <th>지터 (ms)</th>
+          <th>패킷 손실</th>
+          <th>Seq 갭</th>
+          <th>라벨</th>
+        </tr>
+      </thead>
+      <tbody id="session-tbody">
+        <tr><td colspan="6" style="color:#475569;text-align:center;padding:24px">로딩 중...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  // ── 통계 로드 ──
+  async function loadStats() {
+    try {
+      const res  = await fetch('/api/stats');
+      const data = await res.json();
+      document.getElementById('stat-total').textContent   = data.total;
+      document.getElementById('stat-fraud').textContent   = data.fraud;
+      document.getElementById('stat-normal').textContent  = data.normal;
+      document.getElementById('stat-latency').textContent = data.avg_latency_ms;
+    } catch(e) {
+      document.getElementById('status-dot').style.background = '#f87171';
+    }
+  }
+
+  // ── 세션 테이블 ──
+  async function loadSessions() {
+    const tbody = document.getElementById('session-tbody');
+    try {
+      const res  = await fetch('/api/sessions?limit=30');
+      const rows = await res.json();
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#475569;text-align:center;padding:24px">세션 없음 — PCAP을 업로드하세요</td></tr>';
+        return;
       }
-      h1 {
-        color: #2c3e50;
+
+      tbody.innerHTML = rows.map(r => {
+        const badge =
+          r.label === 1  ? '<span class="badge badge-fraud">사기</span>'  :
+          r.label === 0  ? '<span class="badge badge-normal">정상</span>' :
+                           '<span class="badge badge-none">미라벨</span>';
+        return `<tr>
+          <td style="font-family:monospace;font-size:12px">${r.session_id}</td>
+          <td>${r.avg_latency}</td>
+          <td>${r.avg_jitter}</td>
+          <td>${(r.packet_loss * 100).toFixed(1)}%</td>
+          <td>${(r.seq_gap_rate * 100).toFixed(1)}%</td>
+          <td>${badge}</td>
+        </tr>`;
+      }).join('');
+
+      drawJitterChart(rows);
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#f87171;text-align:center">API 오류</td></tr>';
+    }
+  }
+
+  // ── 지터 차트 ──
+  let jitterChart = null;
+  function drawJitterChart(rows) {
+    const labels = rows.map(r => r.session_id.slice(-8));
+    const values = rows.map(r => r.avg_jitter);
+    const colors = rows.map(r => r.label === 1 ? 'rgba(248,113,113,.8)' : 'rgba(74,222,128,.8)');
+
+    const ctx = document.getElementById('jitter-chart').getContext('2d');
+    if (jitterChart) jitterChart.destroy();
+    jitterChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: '지터 (ms)', data: values, backgroundColor: colors, borderRadius: 4 }] },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#475569', font: { size: 10 } }, grid: { color: '#1e293b' } },
+          y: { ticks: { color: '#475569' }, grid: { color: '#334155' } },
+        },
+      },
+    });
+  }
+
+  // ── PCAP 업로드 ──
+  document.getElementById('pcap-file').addEventListener('change', function() {
+    const name = this.files[0]?.name || '파일을 선택하세요';
+    document.getElementById('file-name').textContent = name;
+  });
+
+  async function uploadPcap() {
+    const fileInput = document.getElementById('pcap-file');
+    const resultDiv = document.getElementById('upload-result');
+    const btn       = document.getElementById('upload-btn');
+
+    if (!fileInput.files.length) {
+      resultDiv.innerHTML = '<span class="warn">파일을 선택하세요</span>';
+      return;
+    }
+
+    const label = document.querySelector('input[name="label"]:checked').value;
+    const form  = new FormData();
+    form.append('file',  fileInput.files[0]);
+    form.append('label', label);
+
+    btn.disabled        = true;
+    btn.textContent     = '분석 중...';
+    resultDiv.innerHTML = '';
+
+    try {
+      const res  = await fetch('/api/upload-pcap', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (res.ok && data.status === 'ok') {
+        resultDiv.innerHTML = `<span class="ok">✅ ${data.inserted}개 세션 저장 완료</span>`;
+        loadStats();
+        loadSessions();
+      } else {
+        resultDiv.innerHTML = `<span class="warn">⚠ ${data.message || data.error}</span>`;
       }
-      .status {
-        color: green;
-        font-weight: bold;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>🛡️ SIM Box 탐지 시스템 대시보드</h1>
-    <p>현재 서버 상태: <span class="status">정상 작동 중 (Online)</span></p>
-    <p>팀원 C(현서)의 Flask 서버가 성공적으로 실행되었습니다!</p>
-  </body>
+    } catch(e) {
+      resultDiv.innerHTML = `<span class="err">❌ 서버 연결 실패</span>`;
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '업로드 & 분석';
+    }
+  }
+
+  // ── 초기 로드 ──
+  loadStats();
+  loadSessions();
+  setInterval(() => { loadStats(); loadSessions(); }, 30000);
+</script>
+
+</body>
 </html>
