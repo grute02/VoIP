@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inc0gnito — 프로젝트 현황판</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090f;
+  --s0: #0c1018;
+  --s1: #111827;
+  --s2: #1a2535;
+  --border: #1e2d42;
+  --a: #22d3ee;
+  --b: #a78bfa;
+  --c: #34d399;
+  --done: #34d399;
+  --wip: #fbbf24;
+  --block: #f87171;
+  --pend: #475569;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Noto Sans KR', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 90% 0%, rgba(34,211,238,.05) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 5% 90%, rgba(167,139,250,.05) 0%, transparent 55%);
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* HEADER */
+header { border-bottom: 1px solid var(--border); padding: 28px 0 20px; }
+.header-inner { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+.project-tag { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.project-title { font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+.project-title em { font-style: normal; color: var(--a); }
+.header-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.meta-chip { font-family: var(--mono); font-size: 11px; background: var(--s1); border: 1px solid var(--border); padding: 5px 12px; border-radius: 6px; color: var(--muted); }
+.meta-chip.live { border-color: var(--done); color: var(--done); }
+
+/* NAV */
+.nav { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 16px 0 0; overflow-x: auto; }
+.nav-btn { font-family: var(--mono); font-size: 11px; letter-spacing: .05em; padding: 8px 16px; background: none; border: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color .15s; }
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--a); border-bottom-color: var(--a); }
+
+/* TAB PANELS */
+.tab-panel { display: none; padding: 32px 0; }
+.tab-panel.active { display: block; }
+
+/* PANELS */
+.panel { background: var(--s0); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; }
+.panel-title { font-family: var(--mono); font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+
+/* STAT GRID */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+@media(max-width:900px){ .stat-grid { grid-template-columns: repeat(2,1fr); } }
+.stat-card { background: var(--s0); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.s-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.s-val { font-size: 28px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+.s-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* OVERVIEW GRID */
+.overview-top { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+@media(max-width:700px){ .overview-top { grid-template-columns: 1fr; } }
+
+/* PROGRESS */
+.prog-row { margin-bottom: 14px; }
+.prog-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.prog-label span { color: var(--muted); }
+.prog-bar { height: 6px; background: var(--s2); border-radius: 99px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 99px; }
+
+/* MILESTONES */
+.milestone-list { display: flex; flex-direction: column; gap: 10px; }
+.milestone { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.ms-dot { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; flex-shrink: 0; }
+.ms-done { background: rgba(52,211,153,.12); color: var(--done); }
+.ms-cur  { background: rgba(251,191,36,.12); color: var(--wip); border: 1px solid rgba(251,191,36,.3); }
+.ms-next { background: var(--s1); color: var(--muted); }
+.ms-info { flex: 1; }
+.ms-name { font-size: 13px; font-weight: 500; }
+.ms-date { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 1px; }
+.ms-badge { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 99px; }
+.ms-badge.done { background: rgba(52,211,153,.1); color: var(--done); }
+.ms-badge.cur  { background: rgba(251,191,36,.1); color: var(--wip); }
+.ms-badge.next { background: var(--s1); color: var(--muted); }
+
+/* TEAM GRID */
+.team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media(max-width:900px){ .team-grid { grid-template-columns: 1fr 1fr; } }
+@media(max-width:580px){ .team-grid { grid-template-columns: 1fr; } }
+
+.member-card { background: var(--s0); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative; overflow: hidden; transition: transform .2s, border-color .2s; }
+.member-card:hover { transform: translateY(-3px); }
+.member-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.mc-a::after { background: linear-gradient(90deg, var(--a), transparent); }
+.mc-b::after { background: linear-gradient(90deg, var(--b), transparent); }
+.mc-c::after { background: linear-gradient(90deg, var(--c), transparent); }
+.mc-a:hover { border-color: rgba(34,211,238,.25); }
+.mc-b:hover { border-color: rgba(167,139,250,.25); }
+.mc-c:hover { border-color: rgba(52,211,153,.25); }
+
+.mc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.mc-avatar { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 500; font-size: 16px; flex-shrink: 0; }
+.mc-a .mc-avatar { background: rgba(34,211,238,.1); color: var(--a); }
+.mc-b .mc-avatar { background: rgba(167,139,250,.1); color: var(--b); }
+.mc-c .mc-avatar { background: rgba(52,211,153,.1); color: var(--c); }
+.mc-name { font-size: 15px; font-weight: 700; }
+.mc-role { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: .04em; }
+
+.task-sec-label { font-family: var(--mono); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; }
+.task-item { display: flex; gap: 8px; padding: 7px 9px; border-radius: 7px; margin-bottom: 4px; font-size: 12.5px; line-height: 1.45; align-items: flex-start; }
+.t-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.t-done .t-dot  { background: var(--done); box-shadow: 0 0 5px var(--done); }
+.t-wip  .t-dot  { background: var(--wip);  box-shadow: 0 0 5px var(--wip); }
+.t-block .t-dot { background: var(--block); box-shadow: 0 0 5px var(--block); }
+.t-pend .t-dot  { background: var(--pend); }
+.t-done  { opacity: .6; }
+.t-done .t-text { text-decoration: line-through; color: var(--muted); }
+.t-block { background: rgba(248,113,113,.06); }
+.t-wip   { background: rgba(251,191,36,.05); }
+
+.mc-status { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; padding: 4px 10px; border-radius: 99px; margin-top: 16px; }
+.st-done  { background: rgba(52,211,153,.1); color: var(--done); }
+.st-wip   { background: rgba(251,191,36,.1); color: var(--wip); }
+.st-block { background: rgba(248,113,113,.1); color: var(--block); }
+.st-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* WBS TABLE */
+.wbs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.wbs-table th { text-align: left; padding: 10px 14px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.wbs-table td { padding: 11px 14px; border-bottom: 1px solid rgba(30,45,66,.6); vertical-align: top; }
+.wbs-table tr:hover td { background: rgba(255,255,255,.015); }
+.week-num { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.week-cur td { background: rgba(251,191,36,.04) !important; }
+.week-cur .week-num { color: var(--wip); }
+.phase-cell { font-size: 11px; padding: 3px 8px; border-radius: 5px; white-space: nowrap; display: inline-block; }
+.ph1 { background: rgba(34,211,238,.08); color: var(--a); }
+.ph2 { background: rgba(167,139,250,.08); color: var(--b); }
+.ph3 { background: rgba(52,211,153,.08); color: var(--c); }
+.assignee-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.pill { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 99px; }
+.pill-a { background: rgba(34,211,238,.1); color: var(--a); }
+.pill-b { background: rgba(167,139,250,.1); color: var(--b); }
+.pill-c { background: rgba(52,211,153,.1); color: var(--c); }
+.row-status { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+.rs-done { background: rgba(52,211,153,.1); color: var(--done); }
+.rs-cur  { background: rgba(251,191,36,.1); color: var(--wip); }
+.rs-pend { background: var(--s1); color: var(--muted); }
+@media(max-width:640px){ .wbs-table th:nth-child(4), .wbs-table td:nth-child(4) { display: none; } }
+
+/* DEPS */
+.dep-list { display: flex; flex-direction: column; gap: 10px; }
+.dep-item { display: flex; align-items: center; gap: 12px; background: var(--s0); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; flex-wrap: wrap; }
+.dep-chip { font-family: var(--mono); font-size: 11px; padding: 4px 12px; border-radius: 6px; min-width: 68px; text-align: center; white-space: nowrap; }
+.dc-a { background: rgba(34,211,238,.1); color: var(--a); }
+.dc-b { background: rgba(167,139,250,.1); color: var(--b); }
+.dc-c { background: rgba(52,211,153,.1); color: var(--c); }
+.dep-arrow { color: var(--muted); font-size: 14px; }
+.dep-desc { flex: 1; font-size: 13px; min-width: 180px; }
+.dep-desc small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+.dep-tag { font-family: var(--mono); font-size: 10px; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+.dep-waiting { background: rgba(248,113,113,.1); color: var(--block); }
+.dep-ready   { background: rgba(52,211,153,.1); color: var(--done); }
+
+/* EDIT */
+.edit-bar { display: flex; align-items: center; gap: 10px; background: var(--s1); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.edit-bar span { font-size: 12px; color: var(--muted); flex: 1; }
+.edit-toggle { font-family: var(--mono); font-size: 11px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--s0); color: var(--text); cursor: pointer; transition: border-color .15s; }
+.edit-toggle:hover { border-color: var(--a); color: var(--a); }
+.edit-toggle.on { border-color: var(--wip); color: var(--wip); background: rgba(251,191,36,.06); }
+[contenteditable="true"] { outline: none; border-bottom: 1px dashed rgba(251,191,36,.4); min-width: 4px; }
+[contenteditable="true"]:focus { background: rgba(251,191,36,.05); border-radius: 3px; }
+
+/* LEGEND */
+.legend { display: flex; gap: 18px; flex-wrap: wrap; padding: 16px 0 4px; border-top: 1px solid var(--border); margin-top: 24px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.l-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+@media(max-width:480px){
+  .project-title { font-size: 16px; }
+  .overview-top { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="project-tag">Inc0gnito Project · VoIP SIM Box Detection System</div>
+      <h1 class="project-title">물리적 계층 아티팩트 기반 <em>차세대 SIM Box 탐지</em></h1>
+    </div>
+    <div class="header-meta">
+      <div class="meta-chip live">● LIVE</div>
+      <div class="meta-chip" id="cur-date">—</div>
+      <div class="meta-chip">3주차 완료</div>
+      <div class="meta-chip">D-<span id="dday">?</span></div>
+    </div>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="switchTab('overview',this)">개요</button>
+  <button class="nav-btn" onclick="switchTab('team',this)">팀원 현황</button>
+  <button class="nav-btn" onclick="switchTab('wbs',this)">WBS 일정</button>
+  <button class="nav-btn" onclick="switchTab('deps',this)">의존 관계</button>
+</nav>
+</div>
+
+<!-- ════ TAB 1: 개요 ════ -->
+<div class="wrap">
+<div id="tab-overview" class="tab-panel active">
+
+  <div class="edit-bar">
+    <span>✏️ 편집 모드를 켜면 텍스트를 직접 클릭해서 수정할 수 있어요</span>
+    <button class="edit-toggle" id="edit-btn" onclick="toggleEdit()">편집 켜기</button>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="s-label">전체 진행률</div>
+      <div class="s-val" style="color:var(--a)">22%</div>
+      <div class="s-sub">3주차 / 총 14주</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">완료 주차</div>
+      <div class="s-val" style="color:var(--done)">3</div>
+      <div class="s-sub">Phase 1 진행중</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">다음 리비전</div>
+      <div class="s-val" style="color:var(--wip);font-size:17px;padding-top:4px">2차</div>
+      <div class="s-sub">2/23 ~ 2/27</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">최종 마감</div>
+      <div class="s-val" style="color:var(--block);font-size:17px;padding-top:4px">4/26</div>
+      <div class="s-sub">컨퍼런스 5/9</div>
+    </div>
+  </div>
+
+  <div class="overview-top">
+    <div class="panel">
+      <div class="panel-title">단계별 진행률</div>
+      <div class="prog-row">
+        <div class="prog-label"><span>Phase 1 · 기획 및 데이터 생성 (1~3주)</span><strong style="color:var(--a)">66%</strong></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:66%;background:linear-gradient(90deg,var(--b),var(--a))"></div></div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label"><span>Phase 2 · 알고리즘 개발 및 모델링 (4~7주)</span><strong style="color:var(--muted)">0%</strong></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--b)"></div></div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label"><span>Phase 3 · 시스템 통합 및 완료 (8~10주)</span><strong style="color:var(--muted)">0%</strong></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:0%;background:var(--c)"></div></div>
+      </div>
+      <div class="prog-row" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="prog-label"><span>전체 (Inc0gnito 16주 기준)</span><strong style="color:var(--a)">22%</strong></div>
+        <div class="prog-bar" style="height:8px"><div class="prog-fill" style="width:22%;background:linear-gradient(90deg,var(--b),var(--a))"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">주요 마일스톤</div>
+      <div class="milestone-list">
+        <div class="milestone">
+          <div class="ms-dot ms-done">✓</div>
+          <div class="ms-info"><div class="ms-name">1차 리비전</div><div class="ms-date">1/14 ~ 1/16</div></div>
+          <span class="ms-badge done">완료</span>
+        </div>
+        <div class="milestone">
+          <div class="ms-dot ms-cur">●</div>
+          <div class="ms-info"><div class="ms-name">2차 리비전</div><div class="ms-date">2/23 ~ 2/27</div></div>
+          <span class="ms-badge cur">진행중</span>
+        </div>
+        <div class="milestone">
+          <div class="ms-dot ms-next">3</div>
+          <div class="ms-info"><div class="ms-name">3차 리비전</div><div class="ms-date">3/30 ~ 4/3</div></div>
+          <span class="ms-badge next">예정</span>
+        </div>
+        <div class="milestone">
+          <div class="ms-dot ms-next">F</div>
+          <div class="ms-info"><div class="ms-name">최종 마감</div><div class="ms-date">4/26 (일)</div></div>
+          <span class="ms-badge next">예정</span>
+        </div>
+        <div class="milestone">
+          <div class="ms-dot ms-next">C</div>
+          <div class="ms-info"><div class="ms-name">Inc0gnito 컨퍼런스</div><div class="ms-date">5/9 (토)</div></div>
+          <span class="ms-badge next">예정</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="border-color:rgba(248,113,113,.2)">
+    <div class="panel-title" style="color:var(--block)">⛔ 현재 블로커</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:8px 12px;background:rgba(248,113,113,.04);border-radius:8px;flex-wrap:wrap">
+        <span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(34,211,238,.1);color:var(--a);white-space:nowrap">이안→현서</span>
+        RTP 포함 PCAP 미전달 — 파서 실데이터 검증 불가
+        <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--block)">WAITING</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:8px 12px;background:rgba(248,113,113,.04);border-radius:8px;flex-wrap:wrap">
+        <span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(167,139,250,.1);color:var(--b);white-space:nowrap">광준→현서</span>
+        model.pkl 미완성 — /api/analyze 연동 불가
+        <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--block)">WAITING</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ TAB 2: 팀원 현황 ════ -->
+<div class="wrap">
+<div id="tab-team" class="tab-panel">
+
+  <div class="edit-bar">
+    <span>✏️ 편집 모드를 켜면 각 항목을 직접 수정해서 최신화할 수 있어요</span>
+    <button class="edit-toggle" id="edit-btn2" onclick="toggleEdit()">편집 켜기</button>
+  </div>
+
+  <div class="team-grid">
+
+    <!-- A: 이안 -->
+    <div class="member-card mc-a">
+      <div class="mc-head">
+        <div class="mc-avatar">A</div>
+        <div><div class="mc-name">이안</div><div class="mc-role">네트워크 · 데이터 엔지니어</div></div>
+      </div>
+      <div class="task-sec-label">완료</div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">리눅스 VM (Ubuntu) 환경 셋업</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">WSL 2 도입 — 패킷 미전송 이슈 해결</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">SIPp 트래픽 생성 (normal.pcap 29KB / fraud.pcap 36KB)</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">Asterisk → SIPp 방식으로 환경 변경 확정</div></div>
+      <div class="task-sec-label">진행중 / 예정</div>
+      <div class="task-item t-wip"><div class="t-dot"></div><div class="t-text">SIPp <code style="font-family:var(--mono);font-size:10px;background:var(--s2);padding:1px 4px;border-radius:3px">-mi</code> 옵션으로 RTP 포함 PCAP 재생성</div></div>
+      <div class="task-item t-pend"><div class="t-dot"></div><div class="t-text">tc-netem 시나리오 다양화 (패킷 손실, 고지터 추가)</div></div>
+      <div class="task-item t-pend"><div class="t-dot"></div><div class="t-text">1만 세션 이상 대량 데이터 생성 목표</div></div>
+      <div class="task-item t-pend"><div class="t-dot"></div><div class="t-text">학습 데이터셋 레이블링 및 품질 검증</div></div>
+      <div class="mc-status st-wip"><div class="st-dot"></div>진행중</div>
+    </div>
+
+    <!-- B: 광준 -->
+    <div class="member-card mc-b">
+      <div class="mc-head">
+        <div class="mc-avatar">B</div>
+        <div><div class="mc-name">광준</div><div class="mc-role">AI 모델러 · 분석가</div></div>
+      </div>
+      <div class="task-sec-label">완료</div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">데이터 파이프라인 구조 정의 (Raw/Processed)</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">더미 데이터 기반 ML 코드 구조 설계</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">RFC 3550 지터 계산 로직 연구</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">앙상블 모델 (RF + Isolation Forest) 채택 확정</div></div>
+      <div class="task-sec-label">진행중 / 예정</div>
+      <div class="task-item t-wip"><div class="t-dot"></div><div class="t-text">sessions_dummy.csv로 Random Forest 베이스라인 학습</div></div>
+      <div class="task-item t-pend"><div class="t-dot"></div><div class="t-text">Feature Engineering (IAT 분산, 버스트 밀도 파생변수)</div></div>
+      <div class="task-item t-pend"><div class="t-dot"></div><div class="t-text">XGBoost 도입 + SMOTE 불균형 해결</div></div>
+      <div class="task-item t-pend"><div class="t-dot"></div><div class="t-text">Precision / Recall / F1 성능 평가 보고서</div></div>
+      <div class="task-item t-pend"><div class="t-dot"></div><div class="t-text"><code style="font-family:var(--mono);font-size:10px;background:var(--s2);padding:1px 4px;border-radius:3px">model.pkl</code> → src/model/ 저장 후 현서에게 전달</div></div>
+      <div class="mc-status st-wip"><div class="st-dot"></div>진행중</div>
+    </div>
+
+    <!-- C: 현서 -->
+    <div class="member-card mc-c">
+      <div class="mc-head">
+        <div class="mc-avatar">C</div>
+        <div><div class="mc-name">현서</div><div class="mc-role">소프트웨어 · 웹 개발자</div></div>
+      </div>
+      <div class="task-sec-label">완료 (3주차)</div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">Flask 서버 + SQLite DB 구축 및 기동 확인</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">REST API 5개 완성 (sessions, stats, analyze, upload-pcap)</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">rtp_parser.py — RFC 3550 지터 + IAT 세션 특징 추출</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">더미 데이터 100개 DB 삽입 검증 완료</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">대시보드 MVP (Chart.js 지터 그래프 + PCAP 업로드)</div></div>
+      <div class="task-item t-done"><div class="t-dot"></div><div class="t-text">feature/parser 브랜치 GitHub push</div></div>
+      <div class="task-sec-label">블로커 대기</div>
+      <div class="task-item t-block"><div class="t-dot"></div><div class="t-text">⛔ 이안님 RTP PCAP → 파서 실데이터 검증</div></div>
+      <div class="task-item t-block"><div class="t-dot"></div><div class="t-text">⛔ 광준님 model.pkl → /api/analyze 연동</div></div>
+      <div class="mc-status st-block"><div class="st-dot"></div>블로커 대기</div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="l-dot" style="background:var(--done)"></div>완료</div>
+    <div class="legend-item"><div class="l-dot" style="background:var(--wip)"></div>진행중</div>
+    <div class="legend-item"><div class="l-dot" style="background:var(--block)"></div>블로커 대기</div>
+    <div class="legend-item"><div class="l-dot" style="background:var(--pend)"></div>예정</div>
+  </div>
+</div>
+</div>
+
+<!-- ════ TAB 3: WBS ════ -->
+<div class="wrap">
+<div id="tab-wbs" class="tab-panel">
+  <div class="panel" style="overflow-x:auto">
+    <table class="wbs-table">
+      <thead>
+        <tr>
+          <th>주차</th><th>기간</th><th>Phase</th><th>담당</th><th>주요 내용</th><th>상태</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="week-num">1주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">2/1~2/7</td>
+          <td><span class="phase-cell ph1">Phase 1</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-a">A</span><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>주제 확정, VM 환경 셋업, Git 레포 생성, 개발 계획서 초안 작성</td>
+          <td><span class="row-status rs-done">완료</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">2주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">2/8~2/14</td>
+          <td><span class="phase-cell ph1">Phase 1</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-a">A</span><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>tc-netem 시나리오 설계, SIPp 트래픽 생성, Flask MVP + SQLite 구축, PCAP 확보</td>
+          <td><span class="row-status rs-done">완료</span></td>
+        </tr>
+        <tr class="week-cur">
+          <td class="week-num">3주 ◀</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--wip)">2/15~2/21</td>
+          <td><span class="phase-cell ph1">Phase 1</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-c">C</span></div></td>
+          <td>rtp_parser.py 완성, 더미 데이터 생성, DB 연동 검증, API 5개 완성, GitHub push</td>
+          <td><span class="row-status rs-done">완료</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">4주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">2/22~2/28</td>
+          <td><span class="phase-cell ph2">Phase 2</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-a">A</span><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>Feature Engineering, 파생변수 생성 (IAT 분산·버스트 밀도), RTP PCAP 파서 실데이터 검증</td>
+          <td><span class="row-status rs-cur">진행중</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">5주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">3/1~3/7</td>
+          <td><span class="phase-cell ph2">Phase 2</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>Random Forest 베이스라인 학습, 전처리 자동화 파이프라인 설계</td>
+          <td><span class="row-status rs-pend">예정</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">6주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">3/8~3/14</td>
+          <td><span class="phase-cell ph2">Phase 2</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-a">A</span><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>XGBoost 도입, SMOTE 불균형 해결, model.pkl 서빙 테스트</td>
+          <td><span class="row-status rs-pend">예정</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">7주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">3/15~3/21</td>
+          <td><span class="phase-cell ph2">Phase 2</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>탐지 엔진 통합, 전처리→예측 자동화 완성, 모델 성능 평가 보고서</td>
+          <td><span class="row-status rs-pend">예정</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">8주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">3/22~3/28</td>
+          <td><span class="phase-cell ph3">Phase 3</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>Chart.js 시각화 연동, Fraud Score 대시보드, 실시간 알림 기능</td>
+          <td><span class="row-status rs-pend">예정</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">9주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">3/29~4/4</td>
+          <td><span class="phase-cell ph3">Phase 3</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-a">A</span><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>전체 파이프라인 통합 테스트, 새 테스트 데이터 검증 — <strong>3차 리비전 (3/30~4/3)</strong></td>
+          <td><span class="row-status rs-pend">예정</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">10주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">4/5~4/11</td>
+          <td><span class="phase-cell ph3">Phase 3</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-a">A</span><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>최종 보고서 작성, 발표자료 제작, 시연 영상 녹화</td>
+          <td><span class="row-status rs-pend">예정</span></td>
+        </tr>
+        <tr>
+          <td class="week-num">11~14주</td>
+          <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">4/12~4/26</td>
+          <td><span class="phase-cell" style="background:rgba(248,113,113,.08);color:var(--block)">마무리</span></td>
+          <td><div class="assignee-pills"><span class="pill pill-a">A</span><span class="pill pill-b">B</span><span class="pill pill-c">C</span></div></td>
+          <td>버퍼 · 최종 마감 (4/26) · Inc0gnito 컨퍼런스 준비 (5/9)</td>
+          <td><span class="row-status rs-pend">예정</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ════ TAB 4: 의존 관계 ════ -->
+<div class="wrap">
+<div id="tab-deps" class="tab-panel">
+  <div class="dep-list">
+
+    <div class="dep-item">
+      <div class="dep-chip dc-a">이안 A</div>
+      <div class="dep-arrow">→</div>
+      <div class="dep-chip dc-c">현서 C</div>
+      <div class="dep-desc">RTP 포함 PCAP 파일 전달
+        <small>sipp -mi 옵션 필요 · rtp_parser.py 실데이터 검증 대기중</small>
+      </div>
+      <div class="dep-tag dep-waiting">⛔ 대기중</div>
+    </div>
+
+    <div class="dep-item">
+      <div class="dep-chip dc-a">이안 A</div>
+      <div class="dep-arrow">→</div>
+      <div class="dep-chip dc-b">광준 B</div>
+      <div class="dep-desc">대량 PCAP → CSV 변환 후 실제 학습 데이터 전달
+        <small>현재 더미 100개로 ML 구조 설계 중 · 실데이터 도착 시 본 학습 시작</small>
+      </div>
+      <div class="dep-tag dep-waiting">⛔ 대기중</div>
+    </div>
+
+    <div class="dep-item">
+      <div class="dep-chip dc-b">광준 B</div>
+      <div class="dep-arrow">→</div>
+      <div class="dep-chip dc-c">현서 C</div>
+      <div class="dep-desc">model.pkl 완성 → Flask /api/analyze 연동
+        <small>src/model/ 에 pkl 저장 시 현서가 POST 엔드포인트에 즉시 연결 가능</small>
+      </div>
+      <div class="dep-tag dep-waiting">⛔ 대기중</div>
+    </div>
+
+    <div class="dep-item" style="border-color:rgba(52,211,153,.2)">
+      <div class="dep-chip dc-c">현서 C</div>
+      <div class="dep-arrow">→</div>
+      <div class="dep-chip dc-b">광준 B</div>
+      <div class="dep-desc">sessions_dummy.csv 제공 완료
+        <small>data/processed/sessions_dummy.csv · 100개 세션 · feature/parser 브랜치</small>
+      </div>
+      <div class="dep-tag dep-ready">✓ 완료</div>
+    </div>
+
+    <div class="dep-item" style="border-color:rgba(52,211,153,.2)">
+      <div class="dep-chip dc-c">현서 C</div>
+      <div class="dep-arrow">→</div>
+      <div class="dep-chip" style="background:rgba(255,255,255,.04);color:var(--muted)">팀 전체</div>
+      <div class="dep-desc">Flask API 서버 완성 — 모든 팀원 연동 가능
+        <small>GET /api/sessions · POST /api/analyze · POST /api/upload-pcap</small>
+      </div>
+      <div class="dep-tag dep-ready">✓ 완료</div>
+    </div>
+
+  </div>
+
+  <!-- 다음 액션 가이드 -->
+  <div class="panel" style="margin-top:20px">
+    <div class="panel-title">팀원별 다음 액션</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--a);margin-bottom:8px">이안 (A) — 최우선</div>
+        <code style="font-family:var(--mono);font-size:11px;background:var(--s2);padding:8px 12px;border-radius:8px;display:block;color:var(--text);line-height:1.9">sudo sipp -sn uac ...<br><span style="color:var(--wip)">  -mi 10000-20000</span><br>→ RTP PCAP 생성</code>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--b);margin-bottom:8px">광준 (B) — 즉시 가능</div>
+        <code style="font-family:var(--mono);font-size:11px;background:var(--s2);padding:8px 12px;border-radius:8px;display:block;color:var(--text);line-height:1.9">git pull origin feature/parser<br>python generate_dummy.py<br>→ ML 훈련 시작</code>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--c);margin-bottom:8px">현서 (C) — 대기중</div>
+        <code style="font-family:var(--mono);font-size:11px;background:var(--s2);padding:8px 12px;border-radius:8px;display:block;color:var(--text);line-height:1.9">이안님 PCAP 도착 시:<br>POST /api/upload-pcap<br>→ 자동 파싱 + DB 저장</code>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// D-Day & 날짜
+(function(){
+  const today    = new Date();
+  const deadline = new Date('2026-04-26');
+  const diff     = Math.ceil((deadline - today) / 86400000);
+  document.getElementById('dday').textContent = diff > 0 ? diff : '마감!';
+  const y = today.getFullYear();
+  const m = String(today.getMonth()+1).padStart(2,'0');
+  const d = String(today.getDate()).padStart(2,'0');
+  document.getElementById('cur-date').textContent = `${y}.${m}.${d}`;
+})();
+
+// 편집 모드
+let editOn = false;
+const EDITABLE_SEL = '.t-text, .ms-name, .ms-date, .s-val, .s-sub, .dep-desc';
+function toggleEdit() {
+  editOn = !editOn;
+  document.querySelectorAll('.edit-toggle').forEach(b => {
+    b.textContent = editOn ? '✅ 편집 완료' : '편집 켜기';
+    b.classList.toggle('on', editOn);
+  });
+  document.querySelectorAll(EDITABLE_SEL).forEach(el => {
+    el.contentEditable = editOn ? 'true' : 'false';
+  });
+  if (editOn) {
+    // 첫 번째 편집 가능 요소에 포커스 힌트
+    const first = document.querySelector(EDITABLE_SEL);
+    if (first) first.style.outline = 'none';
+  }
+}
+</script>
+</body>
+</html>
