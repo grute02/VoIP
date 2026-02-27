@@ -314,7 +314,7 @@ header{border-bottom:1px solid var(--border);padding:28px 0 20px}
       <div class="ti s-done" data-id="a3" data-member="A"><div class="td"></div><div class="tt" data-ed="a3">SIPp 트래픽 생성 (normal.pcap 29KB / fraud.pcap 36KB)</div></div>
       <div class="ti s-done" data-id="a4" data-member="A"><div class="td"></div><div class="tt" data-ed="a4">Asterisk → SIPp 방식으로 변경 확정</div></div>
       <div class="tsl">진행중 / 예정</div>
-      <div class="ti s-wip"  data-id="a5" data-member="A"><div class="td"></div><div class="tt" data-ed="a5">SIPp <code style="font-family:var(--mono);font-size:10px;background:var(--s2);padding:1px 4px;border-radius:3px">-mi</code> 옵션으로 RTP 포함 PCAP 재생성</div></div>
+      <div class="ti s-wip"  data-id="a5" data-member="A"><div class="td"></div><div class="tt" data-ed="a5">UTM 실패 → 도커로 전환 후 RTP 포함 PCAP 재생성 시도 중</div></div>
       <div class="ti s-pend" data-id="a6" data-member="A"><div class="td"></div><div class="tt" data-ed="a6">tc-netem 시나리오 다양화 (패킷 손실, 고지터)</div></div>
       <div class="ti s-pend" data-id="a7" data-member="A"><div class="td"></div><div class="tt" data-ed="a7">1만 세션 이상 대량 데이터 생성 목표</div></div>
       <div class="ti s-pend" data-id="a8" data-member="A"><div class="td"></div><div class="tt" data-ed="a8">학습 데이터셋 레이블링 및 품질 검증</div></div>
@@ -331,7 +331,7 @@ header{border-bottom:1px solid var(--border);padding:28px 0 20px}
       <div class="ti s-done" data-id="b4" data-member="B"><div class="td"></div><div class="tt" data-ed="b4">앙상블 모델 (RF + Isolation Forest) 채택 확정</div></div>
       <div class="tsl">진행중 / 예정</div>
       <div class="ti s-wip"  data-id="b5" data-member="B"><div class="td"></div><div class="tt" data-ed="b5">sessions_dummy.csv로 Random Forest 베이스라인 학습</div></div>
-      <div class="ti s-pend" data-id="b6" data-member="B"><div class="td"></div><div class="tt" data-ed="b6">Feature Engineering (IAT 분산, 버스트 밀도)</div></div>
+      <div class="ti s-done" data-id="b6" data-member="B"><div class="td"></div><div class="tt" data-ed="b6">Feature Engineering 초안 완성 — 지터·IAT 분산·패킷 손실률 계산 코드 (Google Colab), PCAP 일괄 업로드·자동 라벨링·CSV 출력</div></div>
       <div class="ti s-pend" data-id="b7" data-member="B"><div class="td"></div><div class="tt" data-ed="b7">XGBoost 도입 + SMOTE 불균형 해결</div></div>
       <div class="ti s-pend" data-id="b8" data-member="B"><div class="td"></div><div class="tt" data-ed="b8">Precision / Recall / F1 성능 평가 보고서</div></div>
       <div class="ti s-pend" data-id="b9" data-member="B"><div class="td"></div><div class="tt" data-ed="b9"><code style="font-family:var(--mono);font-size:10px;background:var(--s2);padding:1px 4px;border-radius:3px">model.pkl</code> → src/model/ 저장 후 현서에게 전달</div></div>
